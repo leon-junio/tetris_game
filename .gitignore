@@ -1,0 +1,8 @@
+/dist/*
+*.class
+*.zip
+*.bak
+*.jar
+*.map
+application.linux
+application.windows
