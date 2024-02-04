@@ -6,29 +6,52 @@
  */
 
 import java.util.Random;
+import java.util.List;
 
 //public
-public static final byte PIECE_SIZE= 20, BORDER = 10;
-public static final short WIDTH = 300, HEIGHT = 400;
+public static final byte PIECE_SIZE= 20, FPS = 30, BORDER = 10;
+public static final short WIDTH = 280, HEIGHT = 400; // W and H of game window (just the game frame)
 //private
 private static final byte[] BG_COLOR = {0, 0, 0};
-private static byte FPS = 30, DIFFICULT = 5;
+private static final short MIN_VALUE = -9999, MAX_VALUE = +9999;
+private static byte DIFFICULT = 1, TIME_TO_UPDATE_Y = 0;
+private boolean hitGround = false, running = false, gameOver = false;
+private static final Random randomPiecePicker = new Random();
 // SIMPLE PIECE EXAMPLE
-private static PVector[] ACTUAL_PIECE = null;
+private static PVector[] ACTUAL_PIECE = Piece.PLUS.getBody();
+// collections is a bad idea
+private static final List<PVector[]> ACTUAL_PIECES = new ArrayList<>();
+private static PFont FONT_GAME;
 
 void setup() {
-  size(300, 400);
-  frameRate(FPS);
-  ACTUAL_PIECE = takeRandomPiece();
+  size(600, 400); // WINDOW SIZE (These values are different from WIDTH and HEIGHT)
+  frameRate(FPS * DIFFICULT);
+  FONT_GAME =  createFont("Impact", 18);
+  running = true;
 }
 
 // RENDERS
 
 void draw() {
   background(BG_COLOR[0], BG_COLOR[1], BG_COLOR[2]);
-  drawBorders();
-  drawPiece();
-  updateMovement();
+  drawText();
+  if (running) {
+    drawBorders();
+    TIME_TO_UPDATE_Y++;
+    drawPiece(ACTUAL_PIECE);
+    drawMatrixPieces();
+    checkGameStatus();
+  }
+}
+
+// draw text and utils
+void drawText() {
+  fill(30, 100, 189);
+  textFont(FONT_GAME);
+  text("Tetris Clone Game - Leon Junio", 325, BORDER + 15);
+  if (gameOver) {
+    // TODO: game over logic
+  }
 }
 
 /**
@@ -43,8 +66,16 @@ void drawBorders() {
   rect(0, HEIGHT-BORDER, WIDTH, BORDER);
 }
 
-void drawPiece() {
-  for (PVector pos : ACTUAL_PIECE) {
+// draw the matrix pieces in game (That was not changed by game score logic)
+void drawMatrixPieces() {
+  for (var piece : ACTUAL_PIECES) {
+    drawPiece(piece);
+  }
+}
+
+// draw actual moving piece in game
+void drawPiece(PVector[] piece) {
+  for (PVector pos : piece) {
     stroke(255, 255, 255);
     fill(200, 50, 50);
     rect(pos.x, pos.y, PIECE_SIZE, PIECE_SIZE);
@@ -52,30 +83,48 @@ void drawPiece() {
 }
 
 // LOGIC
-
 PVector[] takeRandomPiece() {
-  Random r = new Random();
-  var pieces = Piece.values();
-  return pieces[r.nextInt(pieces.length)].getBody();
+  println("random");
+  return Piece.values()[randomPiecePicker.nextInt(Piece.values().length)].getBody();
 }
 
+// check automatic features
+void checkGameStatus() {
+  if (hitGround) {
+    ACTUAL_PIECES.add(ACTUAL_PIECE);
+    ACTUAL_PIECE = takeRandomPiece();
+    hitGround = false;
+    TIME_TO_UPDATE_Y = 0;
+  } else {
+    if (TIME_TO_UPDATE_Y == 10) {
+      // frameRate(FPS * DIFFICULT); Some way to change the game difficult
+      updateMovement();
+      TIME_TO_UPDATE_Y = 0;
+    }
+  }
+}
+
+// Automatic piece movement
 void updateMovement() {
   if (!checkColisionWithGround())
-    updatePieceY((byte)1);
+    updatePieceY((byte)PIECE_SIZE);
+  else
+    hitGround = true;
 }
 
 void updatePieceX(byte movement) {
   for (PVector pos : ACTUAL_PIECE) {
-    pos.x += (movement * DIFFICULT);
+    pos.x += movement;
   }
 }
 
 void updatePieceY(byte movement) {
   for (PVector pos : ACTUAL_PIECE) {
-    pos.y += movement * DIFFICULT;
+    pos.y += movement;
   }
 }
 
+// TODO: When rotate pieces bring the piece with the lowest Y to the first position of array
 void rotateAllPiece() {
   PVector centralPoint = calculateCentralPoint();
   for (PVector pos : ACTUAL_PIECE) {
@@ -85,6 +134,7 @@ void rotateAllPiece() {
   }
 }
 
+// Used by rotation move
 PVector calculateCentralPoint() {
   float sumX = 0;
   float sumY = 0;
@@ -92,25 +142,25 @@ PVector calculateCentralPoint() {
     sumX += pos.x;
     sumY += pos.y;
   }
-  float centerX = sumX / ACTUAL_PIECE.length;
-  float centerY = sumY / ACTUAL_PIECE.length;
-  return new PVector(centerX, centerY);
+  return new PVector(sumX / ACTUAL_PIECE.length, sumY / ACTUAL_PIECE.length);
 }
 
+// COLISIONS AND PIECE 2D BODY
+
 boolean checkColisionWithGround() {
-  return (ACTUAL_PIECE[0].y >= HEIGHT - BORDER - PIECE_SIZE);
+  return (getMaxPointY() >= HEIGHT - BORDER - PIECE_SIZE);
 }
 
 boolean checkColisionWithBorderLeft() {
-  return (ACTUAL_PIECE[0].x <= BORDER);
+  return (getMinPointX() <= BORDER);
 }
 
 boolean checkColisionWithBorderRight() {
-  return (getMaxPointX() + PIECE_SIZE >= WIDTH - BORDER);
+  return ((getMaxPointX() + PIECE_SIZE) >= WIDTH - BORDER);
 }
 
 float getMaxPointX() {
-  float max = -1;
+  float max = MIN_VALUE;
   for (PVector pos : ACTUAL_PIECE) {
     if (pos.x > max) {
       max = pos.x;
@@ -119,22 +169,47 @@ float getMaxPointX() {
   return max;
 }
 
+float getMinPointX() {
+  float min = MAX_VALUE;
+  for (PVector pos : ACTUAL_PIECE) {
+    if (pos.x < min) {
+      min = pos.x;
+    }
+  }
+  return min;
+}
+
+// Get max point of Y can be replaced with a simple minimal heap (lowest Y positions in an array)
+float getMaxPointY() {
+  float max = MIN_VALUE;
+  for (PVector pos : ACTUAL_PIECE) {
+    if (pos.y > max) {
+      max = pos.y;
+    }
+  }
+  return max;
+}
+
+// KEYBOARD AND CONTROLS
+
 void keyPressed() {
-  switch(key) {
-  case 'a':
-    if (!checkColisionWithBorderLeft())
-      updatePieceX((byte)-PIECE_SIZE);
-    break;
-  case 'd':
-    if (!checkColisionWithBorderRight())
-      updatePieceX(PIECE_SIZE);
-    break;
-  case 's':
-    if (!checkColisionWithGround())
-      updatePieceY(PIECE_SIZE);
-    break;
-  case 'r':
-    rotateAllPiece();
-    break;
+  if (!hitGround) {
+    switch(key) {
+    case 'a':
+      if (!checkColisionWithBorderLeft())
+        updatePieceX((byte)-(PIECE_SIZE));
+      break;
+    case 'd':
+      if (!checkColisionWithBorderRight())
+        updatePieceX((byte)(PIECE_SIZE));
+      break;
+    case 's':
+      if (!checkColisionWithGround())
+        updatePieceY((byte)(PIECE_SIZE));
+      break;
+    case 'r':
+      rotateAllPiece();
+      break;
+    }
   }
 }
