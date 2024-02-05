@@ -18,9 +18,10 @@ private static byte DIFFICULT = 1, TIME_TO_UPDATE_Y = 0;
 private boolean hitGround = false, running = false, gameOver = false;
 private static final Random randomPiecePicker = new Random();
 // SIMPLE PIECE EXAMPLE
-private static PVector[] ACTUAL_PIECE = Piece.PLUS.getBody();
+private static PieceObj ACTUAL_PIECE;
 // collections is a bad idea
-private static final List<PVector[]> ACTUAL_PIECES = new ArrayList<>();
+// change it to a plain matrix of piece bodies may create one just for colors
+private static final List<PieceObj> ACTUAL_PIECES = new ArrayList<>();
 private static PFont FONT_GAME;
 
 void setup() {
@@ -28,6 +29,7 @@ void setup() {
   frameRate(FPS * DIFFICULT);
   FONT_GAME =  createFont("Impact", 18);
   running = true;
+  ACTUAL_PIECE = new PieceObj(Piece.PLUS);
 }
 
 // RENDERS
@@ -73,19 +75,19 @@ void drawMatrixPieces() {
   }
 }
 
-// draw actual moving piece in game
-void drawPiece(PVector[] piece) {
-  for (PVector pos : piece) {
+// draw any piece in game
+void drawPiece(PieceObj piece) {
+  for (PVector pos : piece.getBody()) {
+    var colors = piece.getMainColor();
     stroke(255, 255, 255);
-    fill(200, 50, 50);
+    fill(colors[0], colors[1], colors[2]);
     rect(pos.x, pos.y, PIECE_SIZE, PIECE_SIZE);
   }
 }
 
 // LOGIC
-PVector[] takeRandomPiece() {
-  println("random");
-  return Piece.values()[randomPiecePicker.nextInt(Piece.values().length)].getBody();
+PieceObj takeRandomPiece() {
+  return new PieceObj(Piece.values()[randomPiecePicker.nextInt(Piece.values().length)]);
 }
 
 // check automatic features
@@ -113,36 +115,31 @@ void updateMovement() {
 }
 
 void updatePieceX(byte movement) {
-  for (PVector pos : ACTUAL_PIECE) {
+  for (PVector pos : ACTUAL_PIECE.getBody()) {
     pos.x += movement;
   }
 }
 
 void updatePieceY(byte movement) {
-  for (PVector pos : ACTUAL_PIECE) {
+  for (PVector pos : ACTUAL_PIECE.getBody()) {
     pos.y += movement;
   }
 }
 
-// TODO: When rotate pieces bring the piece with the lowest Y to the first position of array
 void rotateAllPiece() {
-  PVector centralPoint = calculateCentralPoint();
-  for (PVector pos : ACTUAL_PIECE) {
-    PVector offset = PVector.sub(pos, centralPoint);
-    offset.rotate(HALF_PI);
-    pos.set(PVector.add(centralPoint, offset));
-  }
-}
+  int rotationAnchor = ACTUAL_PIECE.getRotationAnchor();
+  PVector anchor = ACTUAL_PIECE.getBody()[rotationAnchor];
 
-// Used by rotation move
-PVector calculateCentralPoint() {
-  float sumX = 0;
-  float sumY = 0;
-  for (PVector pos : ACTUAL_PIECE) {
-    sumX += pos.x;
-    sumY += pos.y;
+  for (PVector pos : ACTUAL_PIECE.getBody()) {
+    if (pos != anchor) { // Exclude the rotation anchor
+      PVector offset = PVector.sub(pos, anchor);
+      offset.rotate(HALF_PI);
+      pos.set(PVector.add(anchor, offset));
+      // Round the coordinates to the nearest integer
+      pos.x = round(pos.x);
+      pos.y = round(pos.y);
+    }
   }
-  return new PVector(sumX / ACTUAL_PIECE.length, sumY / ACTUAL_PIECE.length);
 }
 
 // COLISIONS AND PIECE 2D BODY
@@ -161,7 +158,7 @@ boolean checkColisionWithBorderRight() {
 
 float getMaxPointX() {
   float max = MIN_VALUE;
-  for (PVector pos : ACTUAL_PIECE) {
+  for (PVector pos : ACTUAL_PIECE.getBody()) {
     if (pos.x > max) {
       max = pos.x;
     }
@@ -171,7 +168,7 @@ float getMaxPointX() {
 
 float getMinPointX() {
   float min = MAX_VALUE;
-  for (PVector pos : ACTUAL_PIECE) {
+  for (PVector pos : ACTUAL_PIECE.getBody()) {
     if (pos.x < min) {
       min = pos.x;
     }
@@ -182,7 +179,7 @@ float getMinPointX() {
 // Get max point of Y can be replaced with a simple minimal heap (lowest Y positions in an array)
 float getMaxPointY() {
   float max = MIN_VALUE;
-  for (PVector pos : ACTUAL_PIECE) {
+  for (PVector pos : ACTUAL_PIECE.getBody()) {
     if (pos.y > max) {
       max = pos.y;
     }
@@ -207,6 +204,13 @@ void keyPressed() {
       if (!checkColisionWithGround())
         updatePieceY((byte)(PIECE_SIZE));
       break;
+    }
+  }
+}
+
+void keyReleased() {
+  if (!hitGround) {
+    switch(key) {
     case 'r':
       rotateAllPiece();
       break;
