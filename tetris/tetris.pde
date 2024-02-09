@@ -9,16 +9,16 @@ import java.util.Random;
 import java.util.List;
 
 //public
-public static final byte PIECE_SIZE= 20, FPS = 30, BORDER = 10;
+public static final byte PIECE_SIZE= 20, NEXT_PIECE_SIZE = 8, FPS = 30, BORDER = 10;
 public static final short WIDTH = 280, HEIGHT = 400; // W and H of game window (just the game frame)
 //private
 private static final byte[] BG_COLOR = {0, 0, 0};
-private static final short MIN_VALUE = -9999, MAX_VALUE = +9999;
+private static final short MIN_VALUE = -9999, MAX_VALUE = +9999, TEXT_NEXT_PIECE_Y = HEIGHT/2;
 private static byte DIFFICULT = 1, TIME_TO_UPDATE_Y = 0;
 private boolean hitGround = false, running = false, gameOver = false;
 private static final Random randomPiecePicker = new Random();
 // SIMPLE PIECE EXAMPLE
-private static PieceObj ACTUAL_PIECE;
+private static PieceObj ACTUAL_PIECE, NEXT_PIECE;
 // collections is a bad idea
 // change it to a plain matrix of piece bodies may create one just for colors
 private static final List<PieceObj> ACTUAL_PIECES = new ArrayList<>();
@@ -29,7 +29,8 @@ void setup() {
   frameRate(FPS * DIFFICULT);
   FONT_GAME =  createFont("Impact", 18);
   running = true;
-  ACTUAL_PIECE = new PieceObj(Piece.PLUS);
+  ACTUAL_PIECE = new PieceObj(Piece.DIAGI);
+  NEXT_PIECE = new PieceObj(Piece.DIAG);
 }
 
 // RENDERS
@@ -41,6 +42,7 @@ void draw() {
     drawBorders();
     TIME_TO_UPDATE_Y++;
     drawPiece(ACTUAL_PIECE);
+    drawNextPiece(NEXT_PIECE);
     drawMatrixPieces();
     checkGameStatus();
   }
@@ -50,7 +52,7 @@ void draw() {
 void drawText() {
   fill(30, 100, 189);
   textFont(FONT_GAME);
-  text("Tetris Clone Game - Leon Junio", 325, BORDER + 15);
+  text("Tetris Processing Game", 345 , BORDER + 35);
   if (gameOver) {
     // TODO: game over logic
   }
@@ -78,10 +80,27 @@ void drawMatrixPieces() {
 // draw any piece in game
 void drawPiece(PieceObj piece) {
   for (PVector pos : piece.getBody()) {
-    var colors = piece.getMainColor();
-    stroke(255, 255, 255);
-    fill(colors[0], colors[1], colors[2]);
-    rect(pos.x, pos.y, PIECE_SIZE, PIECE_SIZE);
+    if (pos!=null) {
+      var colors = piece.getMainColor();
+      stroke(255, 255, 255);
+      fill(colors[0], colors[1], colors[2]);
+      rect(pos.x, pos.y, PIECE_SIZE, PIECE_SIZE);
+    }
+  }
+}
+
+// draw any piece in game
+void drawNextPiece(PieceObj piece) {
+  fill(30, 100, 189);
+  textFont(FONT_GAME);
+  text("Next tetris block piece: ", 355 , TEXT_NEXT_PIECE_Y);
+  for (PVector pos : piece.getBody()) {
+    if (pos!=null) {
+      var colors = piece.getMainColor();
+      stroke(255, 255, 255);
+      fill(colors[0], colors[1], colors[2]);
+      rect(pos.x + WIDTH + 30, pos.y + TEXT_NEXT_PIECE_Y + 75, PIECE_SIZE, PIECE_SIZE);
+    }
   }
 }
 
@@ -94,7 +113,8 @@ PieceObj takeRandomPiece() {
 void checkGameStatus() {
   if (hitGround) {
     ACTUAL_PIECES.add(ACTUAL_PIECE);
-    ACTUAL_PIECE = takeRandomPiece();
+    ACTUAL_PIECE = NEXT_PIECE;
+    NEXT_PIECE = takeRandomPiece();
     hitGround = false;
     TIME_TO_UPDATE_Y = 0;
   } else {
@@ -115,32 +135,13 @@ void updateMovement() {
 }
 
 void updatePieceX(byte movement) {
-  for (PVector pos : ACTUAL_PIECE.getBody()) {
-    pos.x += movement;
-  }
+  ACTUAL_PIECE.changeAllBodyPositions(movement, 0);
 }
 
 void updatePieceY(byte movement) {
-  for (PVector pos : ACTUAL_PIECE.getBody()) {
-    pos.y += movement;
-  }
+  ACTUAL_PIECE.changeAllBodyPositions(0, movement);
 }
 
-void rotateAllPiece() {
-  int rotationAnchor = ACTUAL_PIECE.getRotationAnchor();
-  PVector anchor = ACTUAL_PIECE.getBody()[rotationAnchor];
-
-  for (PVector pos : ACTUAL_PIECE.getBody()) {
-    if (pos != anchor) { // Exclude the rotation anchor
-      PVector offset = PVector.sub(pos, anchor);
-      offset.rotate(HALF_PI);
-      pos.set(PVector.add(anchor, offset));
-      // Round the coordinates to the nearest integer
-      pos.x = round(pos.x);
-      pos.y = round(pos.y);
-    }
-  }
-}
 
 // COLISIONS AND PIECE 2D BODY
 
@@ -212,7 +213,7 @@ void keyReleased() {
   if (!hitGround) {
     switch(key) {
     case 'r':
-      rotateAllPiece();
+      ACTUAL_PIECE.rotatePiece();
       break;
     }
   }

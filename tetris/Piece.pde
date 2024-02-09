@@ -4,25 +4,42 @@ public enum Piece {
     new PVector(((WIDTH/2) - BORDER), BORDER),
     new PVector(((WIDTH/2) - BORDER), BORDER - PIECE_SIZE),
     new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER ),
-    }, new short[]{46, 195, 54}, (byte)1),
+    }, new short[]{46, 195, 54}, (byte)0),
+    CUMBUCA(new PVector[]{
+    new PVector(((WIDTH/2) - BORDER), BORDER),
+    new PVector(((WIDTH/2) - BORDER), BORDER - PIECE_SIZE),
+    new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE * 2, BORDER - PIECE_SIZE),
+     new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE * 2, BORDER),
+    new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER ),
+    }, new short[]{46, 195, 54}, (byte)0),
+    DIAGI(new PVector[]{
+      new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER - PIECE_SIZE),
+      new PVector(((WIDTH/2) - BORDER), BORDER ),
+      new PVector(((WIDTH/2) - BORDER) + PIECE_SIZE, BORDER + PIECE_SIZE),
+    }, new short[]{48, 156, 195}, (byte)0),
+    DIAG(new PVector[]{
+      new PVector(((WIDTH/2) - BORDER), BORDER + PIECE_SIZE),
+      new PVector(((WIDTH/2) - BORDER) + PIECE_SIZE, BORDER ),
+      new PVector(((WIDTH/2) - BORDER) + PIECE_SIZE * 2, BORDER - PIECE_SIZE),
+    }, new short[]{148, 56, 95}, (byte)0),
     ZLINE(new PVector[]{
       new PVector(((WIDTH/2) - BORDER), BORDER),
       new PVector(((WIDTH/2) - BORDER), BORDER - PIECE_SIZE),
       new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER ),
       new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER + PIECE_SIZE),
-    }, new short[]{148, 56, 195}, (byte)1),
+    }, new short[]{148, 56, 195}, (byte)0),
     SLINE(new PVector[]{
       new PVector(((WIDTH/2) - BORDER), BORDER),
       new PVector(((WIDTH/2) - BORDER), BORDER + PIECE_SIZE),
       new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER ),
       new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER - PIECE_SIZE),
-    }, new short[]{237, 86, 162}, (byte)1),
+    }, new short[]{237, 86, 162}, (byte)0),
     CUBE(new PVector[]{
       new PVector(((WIDTH/2) - BORDER), BORDER),
       new PVector(((WIDTH/2) - BORDER), BORDER - PIECE_SIZE),
       new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER ),
       new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER - PIECE_SIZE),
-    }, new short[]{251, 210, 7}, (byte)1),
+    }, new short[]{251, 210, 7}, (byte)-1),
     LINE(new PVector[]{
       new PVector(((WIDTH/2) - BORDER), BORDER),
       new PVector(((WIDTH/2) - BORDER), BORDER - PIECE_SIZE),
@@ -32,6 +49,10 @@ public enum Piece {
     TRIANGLE(new PVector[]{
       new PVector((WIDTH/2) - PIECE_SIZE - BORDER, BORDER),
       new PVector(((WIDTH/2) - PIECE_SIZE - BORDER) + PIECE_SIZE, BORDER),
+      new PVector(((WIDTH/2) - PIECE_SIZE - BORDER) + PIECE_SIZE, BORDER - PIECE_SIZE),
+      new PVector(((WIDTH/2) - PIECE_SIZE - BORDER) + 2 * PIECE_SIZE, BORDER)}, new short[]{235, 34, 15}, (byte)1),
+    Y(new PVector[]{
+      new PVector((WIDTH/2) - PIECE_SIZE - BORDER, BORDER),
       new PVector(((WIDTH/2) - PIECE_SIZE - BORDER) + PIECE_SIZE, BORDER - PIECE_SIZE),
       new PVector(((WIDTH/2) - PIECE_SIZE - BORDER) + 2 * PIECE_SIZE, BORDER)}, new short[]{235, 34, 15}, (byte)1),
     PLUS(new PVector[]{
