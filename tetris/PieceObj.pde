@@ -28,6 +28,46 @@ public class PieceObj {
     return this.rotationAnchor;
   }
 
+  public float getMaxPointX() {
+    float max = tetris.MIN_VALUE;
+    for (PVector pos : this.body) {
+      if (pos.x > max) {
+        max = pos.x;
+      }
+    }
+    return max;
+  }
+
+  public float getMinPointX() {
+    float min = tetris.MAX_VALUE;
+    for (PVector pos : this.body) {
+      if (pos.x < min) {
+        min = pos.x;
+      }
+    }
+    return min;
+  }
+
+  public float getMaxPointY() {
+    float max = tetris.MIN_VALUE;
+    for (PVector pos : this.body) {
+      if (pos.y > max) {
+        max = pos.y;
+      }
+    }
+    return max;
+  }
+
+  public float getMinPointY() {
+    float min = tetris.MAX_VALUE;
+    for (PVector pos : this.body) {
+      if (pos.y < min) {
+        min = pos.y;
+      }
+    }
+    return min;
+  }
+
   public void setBody(PVector[] body) {
     this.body = body;
   }
@@ -48,16 +88,38 @@ public class PieceObj {
   * Rotate the piece
   */
   public void rotatePiece() {
+    var bkp = new PVector[body.length];
+    for (int i = 0; i < body.length; i++) {
+      bkp[i] = new PVector(body[i].x, body[i].y);
+    }
     PVector anchor = this.rotationAnchor != -1 ? ACTUAL_PIECE.getBody()[this.rotationAnchor] : calculateCentralPoint();
     for (PVector pos : this.body) {
-      if (rotationAnchor != -1 && pos != anchor) { // Exclude the rotation anchor
+      if (rotationAnchor != -1 && pos != anchor) {
         PVector offset = PVector.sub(pos, anchor);
         offset.rotate(HALF_PI);
         pos.set(PVector.add(anchor, offset));
         pos.x = round(pos.x);
         pos.y = round(pos.y);
+        if (checkIfRotateIsOutbound()) {
+          this.body = bkp;
+          return;
+        }
+      }
+      // check if anchor is out of the game area
+      if (anchor.x < BORDER || anchor.x > WIDTH - BORDER || anchor.y < BORDER || anchor.y > HEIGHT - BORDER) {
+        this.body = bkp;
+        return;
       }
     }
+  }
+
+  /**
+  * Check if the piece is out of the game area
+  *
+  * @return boolean True if the piece is out of the game area
+  */
+  public boolean checkIfRotateIsOutbound() {
+    return getMaxPointX() + PIECE_SIZE > WIDTH - BORDER || getMinPointX() < BORDER || getMaxPointY() > HEIGHT - BORDER || getMinPointY() < BORDER;
   }
 
   /**
@@ -113,6 +175,14 @@ public class PieceObj {
     body = null;
   }
 
+  /**
+  * Check if the piece is colliding with another piece
+  *
+  * @param piece     The piece to check the collision
+  * @param movementX The x-axis movement
+  * @param movementY The y-axis movement
+  * @return boolean True if the piece is colliding with another piece
+  */
   public boolean checkColisionWithPiece(PieceObj piece, int movementX, int movementY) {
     for (PVector pos : this.body) {
       for (PVector pos2 : piece.getBody()) {

@@ -173,15 +173,15 @@ void updatePieceY(byte movement) {
 // COLISIONS AND PIECE 2D BODY
 
 boolean checkColisionWithGround() {
-  return (getMaxPointY() >= HEIGHT - BORDER - PIECE_SIZE);
+  return (ACTUAL_PIECE.getMaxPointY() >= HEIGHT - BORDER - PIECE_SIZE);
 }
 
 boolean checkColisionWithBorderLeft() {
-  return (getMinPointX() <= BORDER);
+  return (ACTUAL_PIECE.getMinPointX() <= BORDER);
 }
 
 boolean checkColisionWithBorderRight() {
-  return ((getMaxPointX() + PIECE_SIZE) >= WIDTH - BORDER);
+  return ((ACTUAL_PIECE.getMaxPointX() + PIECE_SIZE) >= WIDTH - BORDER);
 }
 
 boolean checkDownColisionWithPieces() {
@@ -202,37 +202,6 @@ boolean checkSideColisionWithPieces() {
       return true;
   };
   return false;
-}
-
-float getMaxPointX() {
-  float max = MIN_VALUE;
-  for (PVector pos : ACTUAL_PIECE.getBody()) {
-    if (pos.x > max) {
-      max = pos.x;
-    }
-  }
-  return max;
-}
-
-float getMinPointX() {
-  float min = MAX_VALUE;
-  for (PVector pos : ACTUAL_PIECE.getBody()) {
-    if (pos.x < min) {
-      min = pos.x;
-    }
-  }
-  return min;
-}
-
-// Get max point of Y can be replaced with a simple minimal heap (lowest Y positions in an array)
-float getMaxPointY() {
-  float max = MIN_VALUE;
-  for (PVector pos : ACTUAL_PIECE.getBody()) {
-    if (pos.y > max) {
-      max = pos.y;
-    }
-  }
-  return max;
 }
 
 // KEYBOARD AND CONTROLS
