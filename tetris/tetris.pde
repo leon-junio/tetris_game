@@ -19,8 +19,6 @@ private boolean hitGround = false, running = false, gameOver = false;
 private static final Random randomPiecePicker = new Random();
 // SIMPLE PIECE EXAMPLE
 private static PieceObj ACTUAL_PIECE, NEXT_PIECE;
-// collections is a bad idea
-// change it to a plain matrix of piece bodies may create one just for colors
 private static final List<PieceObj> ACTUAL_PIECES = new ArrayList<>();
 private static PFont FONT_GAME;
 
@@ -54,7 +52,6 @@ void drawText() {
   textFont(FONT_GAME);
   text("Tetris Processing Game", 345 , BORDER + 35);
   if (gameOver) {
-    // TODO: game over logic
     drawGameOver();
   }
 }
@@ -116,6 +113,7 @@ void drawNextPiece(PieceObj piece) {
 }
 
 // LOGIC
+
 PieceObj takeRandomPiece() {
   return new PieceObj(Piece.values()[randomPiecePicker.nextInt(Piece.values().length)]);
 }
@@ -153,7 +151,7 @@ void restartGame() {
 
 // Automatic piece movement
 void updateMovement() {
-  if (!checkColisionWithGround())
+  if (!checkColisionWithGround() && !checkColisionWithPieces())
     updatePieceY((byte)PIECE_SIZE);
   else
     hitGround = true;
@@ -180,6 +178,14 @@ boolean checkColisionWithBorderLeft() {
 
 boolean checkColisionWithBorderRight() {
   return ((getMaxPointX() + PIECE_SIZE) >= WIDTH - BORDER);
+}
+
+boolean checkColisionWithPieces() {
+  for (var piece : ACTUAL_PIECES) {
+    if(ACTUAL_PIECE.checkColisionWithPiece(piece))
+      return true;
+  };
+  return false;
 }
 
 float getMaxPointX() {
@@ -219,15 +225,15 @@ void keyPressed() {
   if (!hitGround) {
     switch(key) {
     case 'a':
-      if (!checkColisionWithBorderLeft())
+      if (!checkColisionWithBorderLeft() && !checkColisionWithPieces())
         updatePieceX((byte)-(PIECE_SIZE));
       break;
     case 'd':
-      if (!checkColisionWithBorderRight())
+      if (!checkColisionWithBorderRight() && !checkColisionWithPieces())
         updatePieceX((byte)(PIECE_SIZE));
       break;
     case 's':
-      if (!checkColisionWithGround())
+      if (!checkColisionWithGround() && !checkColisionWithPieces())
         updatePieceY((byte)(PIECE_SIZE));
       break;
     case ' ':
