@@ -55,7 +55,18 @@ void drawText() {
   text("Tetris Processing Game", 345 , BORDER + 35);
   if (gameOver) {
     // TODO: game over logic
+    drawGameOver();
   }
+}
+
+/**
+ * Draw the game over screen
+ */
+void drawGameOver() {
+  fill(255, 255, 255);
+  textFont(FONT_GAME);
+  text("Game Over", (WIDTH), HEIGHT/2);
+  text("Press space to restart", (WIDTH)-35, (HEIGHT/2)+40);
 }
 
 /**
@@ -124,6 +135,20 @@ void checkGameStatus() {
       TIME_TO_UPDATE_Y = 0;
     }
   }
+}
+
+/**
+ * Restart the game (reset snake, food, score and move interval)
+ */
+void restartGame() {
+  ACTUAL_PIECE = new PieceObj(Piece.DIAGI);
+  NEXT_PIECE = new PieceObj(Piece.DIAG);
+  ACTUAL_PIECES.clear();
+  hitGround = false;
+  gameOver = false;
+  running = true;
+  TIME_TO_UPDATE_Y = 0;
+  frameRate(FPS * DIFFICULT);
 }
 
 // Automatic piece movement
@@ -205,6 +230,9 @@ void keyPressed() {
       if (!checkColisionWithGround())
         updatePieceY((byte)(PIECE_SIZE));
       break;
+    case ' ':
+      if(gameOver)
+        restartGame();
     }
   }
 }
