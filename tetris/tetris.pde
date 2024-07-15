@@ -151,7 +151,11 @@ void restartGame() {
 
 // Automatic piece movement
 void updateMovement() {
-  if (!checkColisionWithGround() && !checkDownColisionWithPieces())
+  if(checkColisionWithRoof()){
+    gameOver = true;
+    running = false;
+  }
+  else if (!checkColisionWithGround() && !checkDownColisionWithPieces())
     updatePieceY((byte)PIECE_SIZE);
   else
     hitGround = true;
@@ -186,6 +190,10 @@ boolean checkDownColisionWithPieces() {
       return true;
   };
   return false;
+}
+
+boolean checkColisionWithRoof() {
+  return !checkColisionWithGround() && checkDownColisionWithPieces() && ACTUAL_PIECE.getBody()[0].y <= BORDER;
 }
 
 boolean checkSideColisionWithPieces() {
