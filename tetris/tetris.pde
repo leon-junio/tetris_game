@@ -151,7 +151,7 @@ void restartGame() {
 
 // Automatic piece movement
 void updateMovement() {
-  if (!checkColisionWithGround() && !checkColisionWithPieces())
+  if (!checkColisionWithGround() && !checkDownColisionWithPieces())
     updatePieceY((byte)PIECE_SIZE);
   else
     hitGround = true;
@@ -180,9 +180,17 @@ boolean checkColisionWithBorderRight() {
   return ((getMaxPointX() + PIECE_SIZE) >= WIDTH - BORDER);
 }
 
-boolean checkColisionWithPieces() {
+boolean checkDownColisionWithPieces() {
   for (var piece : ACTUAL_PIECES) {
-    if(ACTUAL_PIECE.checkColisionWithPiece(piece))
+    if(ACTUAL_PIECE.checkColisionWithPiece(piece, 0, PIECE_SIZE))
+      return true;
+  };
+  return false;
+}
+
+boolean checkSideColisionWithPieces() {
+  for (var piece : ACTUAL_PIECES) {
+    if(ACTUAL_PIECE.checkColisionWithPiece(piece, PIECE_SIZE, 0) || ACTUAL_PIECE.checkColisionWithPiece(piece, -PIECE_SIZE, 0))
       return true;
   };
   return false;
@@ -225,15 +233,15 @@ void keyPressed() {
   if (!hitGround) {
     switch(key) {
     case 'a':
-      if (!checkColisionWithBorderLeft() && !checkColisionWithPieces())
+      if (!checkColisionWithBorderLeft() && !checkSideColisionWithPieces())
         updatePieceX((byte)-(PIECE_SIZE));
       break;
     case 'd':
-      if (!checkColisionWithBorderRight() && !checkColisionWithPieces())
+      if (!checkColisionWithBorderRight() && !checkSideColisionWithPieces())
         updatePieceX((byte)(PIECE_SIZE));
       break;
     case 's':
-      if (!checkColisionWithGround() && !checkColisionWithPieces())
+      if (!checkColisionWithGround() && !checkDownColisionWithPieces())
         updatePieceY((byte)(PIECE_SIZE));
       break;
     case ' ':

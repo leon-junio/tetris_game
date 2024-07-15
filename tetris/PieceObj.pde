@@ -113,10 +113,10 @@ public class PieceObj {
     body = null;
   }
 
-  public boolean checkColisionWithPiece(PieceObj piece) {
+  public boolean checkColisionWithPiece(PieceObj piece, int movementX, int movementY) {
     for (PVector pos : this.body) {
       for (PVector pos2 : piece.getBody()) {
-        if (pos != null && pos2 != null && pos.x == pos2.x && pos.y + tetris.PIECE_SIZE == pos2.y) {
+        if (pos != null && pos2 != null && pos.x + movementX == pos2.x && pos.y + movementY == pos2.y) {
           return true;
         }
       }
