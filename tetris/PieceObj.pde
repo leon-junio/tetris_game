@@ -130,8 +130,10 @@ public class PieceObj {
   */
   public void changeAllBodyPositions(int x, int y) {
     for (var pos : this.body) {
-      pos.x += x;
-      pos.y += y;
+      if(pos != null){
+        pos.x += x;
+        pos.y += y;
+      }
     }
   }
 
@@ -145,8 +147,10 @@ public class PieceObj {
   public void changeOneBodyPosition(int x, int y, int index) {
     if (index < body.length) {
       var pos = body[index];
-      pos.x += x;
-      pos.y += y;
+      if(pos != null){
+        pos.x += x;
+        pos.y += y;
+      }
     }
   }
 

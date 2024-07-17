@@ -9,7 +9,7 @@ import java.util.Random;
 import java.util.List;
 
 //public
-public static final byte PIECE_SIZE= 20, NEXT_PIECE_SIZE = 8, FPS = 30, BORDER = 10;
+public static final byte PIECE_SIZE= 20, NEXT_PIECE_SIZE = 8, FPS = 30, BORDER = 10; // BORDER CAN'T BE BIGGER THAN PIECE_SIZE
 public static final short WIDTH = 280, HEIGHT = 400; // W and H of game window (just the game frame)
 //private
 private static final byte[] BG_COLOR = {0, 0, 0};
@@ -17,9 +17,12 @@ private static final short MIN_VALUE = -9999, MAX_VALUE = +9999, TEXT_NEXT_PIECE
 private static byte DIFFICULT = 1, TIME_TO_UPDATE_Y = 0;
 private boolean hitGround = false, running = false, gameOver = false;
 private static final Random randomPiecePicker = new Random();
-// SIMPLE PIECE EXAMPLE
 private static PieceObj ACTUAL_PIECE, NEXT_PIECE;
+//TODO: change actual pieces to a matrix of PVectors (x, y) hard to iterate over list
 private static final List<PieceObj> ACTUAL_PIECES = new ArrayList<>();
+
+private PVector[][] FIELD_MAP_PIECES = new PVector[HEIGHT / PIECE_SIZE - (BORDER*2 / PIECE_SIZE)][(WIDTH / PIECE_SIZE) - (BORDER*2 / PIECE_SIZE)];
+
 private static PFont FONT_GAME;
 
 void setup() {
@@ -27,8 +30,8 @@ void setup() {
   frameRate(FPS * DIFFICULT);
   FONT_GAME =  createFont("Impact", 18);
   running = true;
-  ACTUAL_PIECE = new PieceObj(Piece.DIAGI);
-  NEXT_PIECE = new PieceObj(Piece.DIAG);
+  ACTUAL_PIECE = takeRandomPiece();
+  NEXT_PIECE = takeRandomPiece();
 }
 
 // RENDERS
@@ -122,8 +125,12 @@ PieceObj takeRandomPiece() {
 void checkGameStatus() {
   if (hitGround) {
     ACTUAL_PIECES.add(ACTUAL_PIECE);
-    ACTUAL_PIECE = NEXT_PIECE;
-    NEXT_PIECE = takeRandomPiece();
+    insertIntoFieldMap(ACTUAL_PIECE);
+    if(!gameOver){
+      checkFieldMap();  
+      ACTUAL_PIECE = NEXT_PIECE;
+      NEXT_PIECE = takeRandomPiece();
+    }
     hitGround = false;
     TIME_TO_UPDATE_Y = 0;
   } else {
@@ -136,17 +143,84 @@ void checkGameStatus() {
 }
 
 /**
+* Insert the piece into the field map (matrix of pieces)
+* 
+* @param piece The piece to insert
+*/
+void insertIntoFieldMap(PieceObj piece) {
+  for (PVector pos : piece.getBody()) {
+    if (pos!=null) {
+      if(pos.y < BORDER) {
+        gameOver = true;
+        running = false;
+        return;
+      }
+      // use z as a flag to know what is the index of the piece in the pieces list 
+      pos.z = ACTUAL_PIECES.indexOf(piece);
+      FIELD_MAP_PIECES[((int)pos.y - BORDER) / PIECE_SIZE][((int)pos.x - BORDER) / PIECE_SIZE] = pos;
+    }
+  }
+}
+
+/**
+* Check if the user made a line into the field map and call the method to remove it
+*/
+void checkFieldMap() {
+  for (int i = 0; i < FIELD_MAP_PIECES.length; i++) {
+    boolean isLine = true;
+    for (int j = 0; j < FIELD_MAP_PIECES[i].length; j++) {
+      if (FIELD_MAP_PIECES[i][j] == null) {
+        isLine = false;
+        break;
+      }
+    }
+    if (isLine) {
+      removeLine(i);
+    }
+  }
+}
+
+/**
+* Remove a line from the field map and move all the pieces above it down
+* 
+* @param line The line to remove
+*/
+void removeLine(int line) {
+  // remove the pieces from the list and the field map
+  for (int i = 0; i < FIELD_MAP_PIECES[line].length; i++) {
+    var piece = ACTUAL_PIECES.get((int)FIELD_MAP_PIECES[line][i].z);
+    FIELD_MAP_PIECES[line][i] = null;
+    for (int j = 0; j < piece.getBody().length; j++) {
+      if (piece.getBody()[j] != null && piece.getBody()[j].y == (line * PIECE_SIZE) + BORDER) {
+        piece.removeSmallPiece(j);
+      }
+    }
+  }
+  // move all the pieces above the line down
+  for (int i = line; i > 0; i--) {
+    for (int j = 0; j < FIELD_MAP_PIECES[i].length; j++) {
+      FIELD_MAP_PIECES[i][j] = FIELD_MAP_PIECES[i-1][j];
+      if (FIELD_MAP_PIECES[i][j] != null) {
+        FIELD_MAP_PIECES[i][j].y += PIECE_SIZE;
+      }
+    }
+  }
+}
+
+/**
  * Restart the game (reset snake, food, score and move interval)
  */
 void restartGame() {
   ACTUAL_PIECE = new PieceObj(Piece.DIAGI);
   NEXT_PIECE = new PieceObj(Piece.DIAG);
   ACTUAL_PIECES.clear();
+  FIELD_MAP_PIECES = new PVector[HEIGHT / PIECE_SIZE - (BORDER*2 / PIECE_SIZE)][(WIDTH / PIECE_SIZE) - (BORDER*2 / PIECE_SIZE)];
   hitGround = false;
   gameOver = false;
   running = true;
   TIME_TO_UPDATE_Y = 0;
   frameRate(FPS * DIFFICULT);
+  System.gc();
 }
 
 // Automatic piece movement
