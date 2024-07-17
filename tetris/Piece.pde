@@ -11,7 +11,7 @@ public enum Piece {
     new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE * 2, BORDER - PIECE_SIZE),
      new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE * 2, BORDER),
     new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER ),
-    }, new short[]{46, 195, 54}, (byte)0),
+    }, new short[]{46, 195, 54}, (byte)4),
     DIAGI(new PVector[]{
       new PVector(((WIDTH/2) - BORDER) - PIECE_SIZE, BORDER - PIECE_SIZE),
       new PVector(((WIDTH/2) - BORDER), BORDER ),
