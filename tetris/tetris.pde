@@ -11,6 +11,7 @@ import java.util.List;
 //public
 public static final byte PIECE_SIZE= 20, NEXT_PIECE_SIZE = 8, FPS = 30, BORDER = 10; // BORDER CAN'T BE BIGGER THAN PIECE_SIZE
 public static final short WIDTH = 280, HEIGHT = 400; // W and H of game window (just the game frame)
+
 //private
 private static final byte[] BG_COLOR = {0, 0, 0};
 private static final short MIN_VALUE = -9999, MAX_VALUE = +9999, TEXT_NEXT_PIECE_Y = HEIGHT/2;
@@ -18,9 +19,11 @@ private static byte DIFFICULT = 1, TIME_TO_UPDATE_Y = 0;
 private boolean hitGround = false, running = false, gameOver = false;
 private static final Random randomPiecePicker = new Random();
 private static PieceObj ACTUAL_PIECE, NEXT_PIECE;
-//TODO: change actual pieces to a matrix of PVectors (x, y) hard to iterate over list
+
+// List of pieces in game
 private static final List<PieceObj> ACTUAL_PIECES = new ArrayList<>();
 
+// Field map (matrix of pieces) to check if the user made a line and remove it
 private PVector[][] FIELD_MAP_PIECES = new PVector[HEIGHT / PIECE_SIZE - (BORDER*2 / PIECE_SIZE)][(WIDTH / PIECE_SIZE) - (BORDER*2 / PIECE_SIZE)];
 
 private static PFont FONT_GAME;
@@ -39,12 +42,12 @@ void setup() {
 void draw() {
   background(BG_COLOR[0], BG_COLOR[1], BG_COLOR[2]);
   drawText();
+  drawBorders();
+  drawMatrixPieces();
   if (running) {
-    drawBorders();
     TIME_TO_UPDATE_Y++;
     drawPiece(ACTUAL_PIECE);
     drawNextPiece(NEXT_PIECE);
-    drawMatrixPieces();
     checkGameStatus();
   }
 }
@@ -65,15 +68,18 @@ void drawText() {
 void drawGameOver() {
   fill(255, 255, 255);
   textFont(FONT_GAME);
-  text("Game Over", (WIDTH), HEIGHT/2);
-  text("Press space to restart", (WIDTH)-35, (HEIGHT/2)+40);
+  text("Game Over", 390, HEIGHT/2);
+  text("Press space to restart", 345, (HEIGHT/2)+40);
 }
 
 /**
  * Draw the borders of the game (4 rects - top, left, right, bottom)
  */
 void drawBorders() {
-  fill(20, 100, 255);
+  if(!gameOver)
+    fill(20, 100, 255);
+  else
+    fill(255, 0, 0);
   noStroke();
   rect(0, 0, WIDTH, BORDER);
   rect(0, 0, BORDER, HEIGHT);
@@ -182,6 +188,7 @@ void checkFieldMap() {
 
 /**
 * Remove a line from the field map and move all the pieces above it down
+* Iteration over matrix of pieces and list of pieces
 * 
 * @param line The line to remove
 */
@@ -223,13 +230,16 @@ void restartGame() {
   System.gc();
 }
 
-// Automatic piece movement
+/**
+* Update the movement of the piece
+*/
 void updateMovement() {
   if(checkColisionWithRoof()){
-    gameOver = true;
+    hitGround = true; 
     running = false;
+    gameOver = true;
   }
-  else if (!checkColisionWithGround() && !checkDownColisionWithPieces())
+  else if (!checkColisionWithRoof() && !checkColisionWithGround() && !checkDownColisionWithPieces())
     updatePieceY((byte)PIECE_SIZE);
   else
     hitGround = true;
@@ -246,18 +256,38 @@ void updatePieceY(byte movement) {
 
 // COLISIONS AND PIECE 2D BODY
 
+/**
+ * Check if the piece has a colision with the ground
+ * 
+ * @return boolean
+ */
 boolean checkColisionWithGround() {
   return (ACTUAL_PIECE.getMaxPointY() >= HEIGHT - BORDER - PIECE_SIZE);
 }
 
+/**
+ * Check if the piece has a colision with the left border
+ * 
+ * @return boolean
+ */ 
 boolean checkColisionWithBorderLeft() {
   return (ACTUAL_PIECE.getMinPointX() <= BORDER);
 }
 
+/**
+ * Check if the piece has a colision with the right border
+ * 
+ * @return boolean
+ */
 boolean checkColisionWithBorderRight() {
   return ((ACTUAL_PIECE.getMaxPointX() + PIECE_SIZE) >= WIDTH - BORDER);
 }
 
+/**
+ * Check if the piece has a colision with another piece in the game (using the Y axis)
+ * 
+ * @return boolean
+ */
 boolean checkDownColisionWithPieces() {
   for (var piece : ACTUAL_PIECES) {
     if(ACTUAL_PIECE.checkColisionWithPiece(piece, 0, PIECE_SIZE))
@@ -266,10 +296,20 @@ boolean checkDownColisionWithPieces() {
   return false;
 }
 
+/**
+ * Check if the piece has a colision with the roof
+ * 
+ * @return boolean
+ */
 boolean checkColisionWithRoof() {
-  return !checkColisionWithGround() && checkDownColisionWithPieces() && ACTUAL_PIECE.getBody()[0].y <= BORDER;
+  return !checkColisionWithGround() && checkDownColisionWithPieces() && ACTUAL_PIECE.getMaxPointY() < BORDER;
 }
 
+/**
+ * Check if the piece has a colision with another piece in the game (using the X axis)
+ * 
+ * @return boolean
+ */
 boolean checkSideColisionWithPieces() {
   for (var piece : ACTUAL_PIECES) {
     if(ACTUAL_PIECE.checkColisionWithPiece(piece, PIECE_SIZE, 0) || ACTUAL_PIECE.checkColisionWithPiece(piece, -PIECE_SIZE, 0))
@@ -281,29 +321,33 @@ boolean checkSideColisionWithPieces() {
 // KEYBOARD AND CONTROLS
 
 void keyPressed() {
-  if (!hitGround) {
+  if (running && !gameOver && !hitGround) {
     switch(key) {
     case 'a':
-      if (!checkColisionWithBorderLeft() && !checkSideColisionWithPieces())
+      if (!checkColisionWithRoof() && !checkColisionWithBorderLeft() && !checkSideColisionWithPieces())
         updatePieceX((byte)-(PIECE_SIZE));
       break;
     case 'd':
-      if (!checkColisionWithBorderRight() && !checkSideColisionWithPieces())
+      if (!checkColisionWithRoof() && !checkColisionWithBorderRight() && !checkSideColisionWithPieces())
         updatePieceX((byte)(PIECE_SIZE));
       break;
     case 's':
-      if (!checkColisionWithGround() && !checkDownColisionWithPieces())
+      if (!checkColisionWithRoof() && !checkColisionWithGround() && !checkDownColisionWithPieces())
         updatePieceY((byte)(PIECE_SIZE));
       break;
-    case ' ':
-      if(gameOver)
-        restartGame();
+    }
+  }else{
+    switch(key) {
+      case ' ':
+        if(gameOver)
+          restartGame();
+          break;
     }
   }
 }
 
 void keyReleased() {
-  if (!hitGround) {
+  if (running && !hitGround) {
     switch(key) {
     case 'r':
       ACTUAL_PIECE.rotatePiece();
