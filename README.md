@@ -7,10 +7,7 @@ A simple tetris game coded in java with processing to train code control and max
 
 ## Run
 
- - JDK 11 required
- - Just execute the .exe file or the linux file
-
-> java -jar will not work!
+ - JDK 17 required
     
 ## Authors
 
