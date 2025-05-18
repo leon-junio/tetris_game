@@ -5,12 +5,14 @@ public class PieceObj {
     this.remaining = (byte) this.body.length;
     this.mainColor = piece.getMainColor();
     this.rotationAnchor = piece.getRotationAnchor();
+    this.type = piece;
   }
 
   private PVector[] body;
   private short[] mainColor;
   private byte rotationAnchor;
   private byte remaining;
+  private Piece type;
 
   public PVector[] getBody() {
     return this.body;

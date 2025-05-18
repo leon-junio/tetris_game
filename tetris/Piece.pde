@@ -72,7 +72,10 @@ public enum Piece {
       new PVector(((WIDTH/2) - BORDER), BORDER - PIECE_SIZE),
       new PVector(((WIDTH/2) - BORDER), BORDER - PIECE_SIZE * 2),
       new PVector(((WIDTH/2) - BORDER) + PIECE_SIZE, BORDER ),
-    }, new short[]{255, 155, 0}, (byte)1);
+    }, new short[]{255, 155, 0}, (byte)1),
+    BOMB (new PVector[]{
+      new PVector(((WIDTH/2) - BORDER), BORDER),
+    }, new short[]{30, 12, 12}, (byte)-1);
 
   private Piece(PVector[] body, short[] mainColor, byte rotationAnchor) {
     this.body = body;
@@ -83,6 +86,7 @@ public enum Piece {
   private PVector[] body;
   private short[] mainColor;
   private byte rotationAnchor;
+  public static final byte specialPiecesOffset = 1;
 
   public PVector[] getBody() {
     PVector[] newBody = new PVector[body.length];
@@ -103,4 +107,9 @@ public enum Piece {
   public short[] getMainColor() {
     return mainColor;
   }
+
+  public static final Piece[] selectedPiecesToDraw = new Piece[]{
+    ZLINE, SLINE, CUBE, LINE,
+    TRIANGLE, LPIECE, LPIECEI, BOMB
+  };
 }
