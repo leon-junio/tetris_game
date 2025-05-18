@@ -57,6 +57,7 @@ void draw() {
     }
   }catch(Exception e){
     System.out.println("Error: " + e.getMessage());
+    e.printStackTrace();
     System.exit(1);
   }
 }
@@ -156,10 +157,10 @@ PieceObj takeRandomPiece() {
 void checkGameStatus() {
   if (hitGround) {
     ACTUAL_PIECES.add(ACTUAL_PIECE);
+    insertIntoFieldMap(ACTUAL_PIECE);
     if(ACTUAL_PIECE.type == Piece.BOMB) {
       bombPiece(ACTUAL_PIECE);
     }
-    insertIntoFieldMap(ACTUAL_PIECE);
     if(!gameOver){
       checkFieldMap();  
       ACTUAL_PIECE = NEXT_PIECE;
@@ -239,14 +240,6 @@ void removeLine(int line) {
       if (FIELD_MAP_PIECES[i][j] != null) {
         FIELD_MAP_PIECES[i][j].y += PIECE_SIZE;
       }
-    }
-  }
-
-  // clear all pieces with remaining = 0
-  for (int i = 0; i < ACTUAL_PIECES.size(); i++) {
-    if (ACTUAL_PIECES.get(i).remaining == 0) {
-      removePieceFromFieldMap(ACTUAL_PIECES.get(i));
-      i--;
     }
   }
 }
@@ -407,10 +400,10 @@ void bombPiece(PieceObj bomb) {
   }
 
   removePieceFromFieldMap(bomb);
-  reorganizeFieldAfterBomb();
+  reorganizeField();
 }
 
-void reorganizeFieldAfterBomb() {
+void reorganizeField() {
   for (int i = FIELD_MAP_PIECES.length - 2; i >= 0; i--) { // de baixo pra cima
     for (int j = 0; j < FIELD_MAP_PIECES[i].length; j++) {
       PVector current = FIELD_MAP_PIECES[i][j];
